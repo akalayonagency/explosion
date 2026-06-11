@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PhoneXpress — Hero</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #040C1E;
+    --navy-2:  #071028;
+    --blue:    #0D2151;
+    --accent:  #2563EB;
+    --gold:    #B8912A;
+    --text:    #E4EAF6;
+    --muted:   #6B7FA8;
+    --white:   #FFFFFF;
+  }
+
+  html, body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO WRAPPER ─────────────────────────────────── */
+  .hero {
+    position: relative;
+    width: 100%;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 80px 24px 60px;
+  }
+
+  /* ── BACKGROUND WORDMARK ──────────────────────────── */
+  .bg-wordmark {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .bg-wordmark span {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 18vw, 220px);
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(37,99,235,0.07) 30%,
+      rgba(37,99,235,0.13) 50%,
+      rgba(37,99,235,0.07) 70%,
+      transparent 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    user-select: none;
+  }
+
+  /* shimmer sweep */
+  @keyframes shimmer {
+    0%   { background-position: -200% center; }
+    100% { background-position:  200% center; }
+  }
+  .bg-wordmark span {
+    background-size: 200% auto;
+    animation: shimmer 6s linear infinite;
+  }
+
+  /* ── RADIAL GLOW ──────────────────────────────────── */
+  .glow {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow-center {
+    width: 700px; height: 700px;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(ellipse, rgba(37,99,235,0.18) 0%, transparent 70%);
+  }
+  .glow-top {
+    width: 400px; height: 300px;
+    top: -80px; left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(ellipse, rgba(184,145,42,0.10) 0%, transparent 70%);
+  }
+
+  /* ── TOP NAV BAR (minimal) ────────────────────────── */
+  .hero-nav {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 40px;
+  }
+  .hero-nav .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .hero-nav .logo em {
+    color: var(--accent);
+    font-style: normal;
+  }
+  .hero-nav .nav-cta {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .hero-nav .nav-cta:hover { color: var(--text); }
+
+  /* ── PHONE STAGE ──────────────────────────────────── */
+  .stage {
+    position: relative;
+    z-index: 2;
+    width: min(680px, 96vw);
+    aspect-ratio: 2 / 1;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Final assembled phone */
+  .phone-final {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.94);
+    transition: none; /* controlled by anime */
+    z-index: 2;
+  }
+  .phone-final img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 30px 80px rgba(10,40,120,0.7));
+  }
+
+  /* Exploded view container */
+  .phone-exploded {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+  }
+  .phone-exploded img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 60px rgba(10,40,120,0.5));
+  }
+
+  /* Layer slices – we clip the exploded image into vertical strips */
+  .slices-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .slice {
+    position: absolute;
+    top: 0; bottom: 0;
+    overflow: hidden;
+  }
+  .slice img {
+    position: absolute;
+    top: 0; height: 100%;
+    object-fit: contain;
+  }
+
+  /* ── COPY BLOCK ───────────────────────────────────── */
+  .hero-copy {
+    position: relative;
+    z-index: 4;
+    text-align: center;
+    margin-top: 28px;
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 14px;
+  }
+  .hero-eyebrow::before,
+  .hero-eyebrow::after {
+    content: '';
+    display: block;
+    width: 28px; height: 1px;
+    background: var(--gold);
+    opacity: 0.5;
+  }
+  .hero-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(38px, 6vw, 72px);
+    letter-spacing: 0.04em;
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 16px;
+  }
+  .hero-headline .accent { color: var(--accent); }
+  .hero-sub {
+    font-size: clamp(13px, 1.5vw, 16px);
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 420px;
+    margin: 0 auto 30px;
+    line-height: 1.7;
+  }
+  .hero-actions {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 13px 30px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform .15s, box-shadow .15s;
+    display: inline-block;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 6px 30px rgba(37,99,235,0.45);
+  }
+  .btn-primary:hover { box-shadow: 0 10px 40px rgba(37,99,235,0.6); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(100,130,200,0.35);
+  }
+  .btn-ghost:hover { border-color: rgba(100,130,200,0.7); }
+
+  /* ── BOTTOM TRUST BAR ─────────────────────────────── */
+  .trust-bar {
+    position: relative;
+    z-index: 4;
+    margin-top: 52px;
+    display: flex;
+    align-items: center;
+    gap: clamp(20px, 4vw, 56px);
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  .trust-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .trust-item .val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(24px, 3.5vw, 34px);
+    letter-spacing: 0.06em;
+    color: var(--white);
+  }
+  .trust-item .lbl {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .trust-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(100,130,200,0.2);
+  }
+
+  /* ── GRID LINES (decorative) ──────────────────────── */
+  .grid-lines {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.03;
+    background-image:
+      linear-gradient(var(--text) 1px, transparent 1px),
+      linear-gradient(90deg, var(--text) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  /* ── SCROLL HINT ──────────────────────────────────── */
+  .scroll-hint {
+    position: absolute;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+  }
+  .scroll-hint span {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .scroll-line {
+    width: 1px;
+    height: 32px;
+    background: linear-gradient(to bottom, var(--muted), transparent);
+    animation: scrollPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(0.6); transform-origin: top; }
+    50% { opacity: 1; transform: scaleY(1); transform-origin: top; }
+  }
+
+  /* ── RESPONSIVE ───────────────────────────────────── */
+  @media (max-width: 600px) {
+    .hero-nav { padding: 18px 20px; }
+    .stage { aspect-ratio: 3 / 2; }
+    .trust-bar { gap: 14px; }
+    .trust-divider { height: 24px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bg-wordmark span { animation: none; }
+    .scroll-line { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="hero" id="hero">
+
+  <!-- decorative grid -->
+  <div class="grid-lines"></div>
+
+  <!-- radial glows -->
+  <div class="glow glow-center"></div>
+  <div class="glow glow-top"></div>
+
+  <!-- background wordmark -->
+  <div class="bg-wordmark" aria-hidden="true">
+    <span>PHONEXPRESS</span>
+  </div>
+
+  <!-- minimal nav -->
+  <nav class="hero-nav">
+    <a href="#" class="logo">Phone<em>X</em>press</a>
+    <a href="#contact" class="nav-cta">Book a repair</a>
+  </nav>
+
+  <!-- ─── PHONE ANIMATION STAGE ─── -->
+  <div class="stage" id="stage" aria-label="iPhone assembly animation">
+
+    <!-- Assembled phone (fades in at the end) -->
+    <div class="phone-final" id="phoneFinal">
+      <img src="./iphone-final.png" alt="iPhone fully assembled" />
+    </div>
+
+    <!-- Sliced exploded view (animates horizontally) -->
+    <div class="slices-wrapper" id="slicesWrapper"></div>
+
+  </div>
+
+  <!-- ─── COPY ─── -->
+  <div class="hero-copy" id="heroCopy">
+    <p class="hero-eyebrow">Expert Repair · Same Day Service</p>
+    <h1 class="hero-headline">
+      We Fix What<br><span class="accent">Others Can't.</span>
+    </h1>
+    <p class="hero-sub">
+      Every component, every circuit, every pixel—
+      precision repairs by certified technicians. Walk in broken, walk out whole.
+    </p>
+    <div class="hero-actions">
+      <a href="#booking" class="btn btn-primary">Book a Repair</a>
+      <a href="#services" class="btn btn-ghost">Our Services</a>
+    </div>
+  </div>
+
+  <!-- ─── TRUST BAR ─── -->
+  <div class="trust-bar" id="trustBar">
+    <div class="trust-item">
+      <span class="val">30K+</span>
+      <span class="lbl">Devices repaired</span>
+    </div>
+    <div class="trust-divider"></div>
+    <div class="trust-item">
+      <span class="val">2HR</span>
+      <span class="lbl">Avg turnaround</span>
+    </div>
+    <div class="trust-divider"></div>
+    <div class="trust-item">
+      <span class="val">100%</span>
+      <span class="lbl">Satisfaction rate</span>
+    </div>
+    <div class="trust-divider"></div>
+    <div class="trust-item">
+      <span class="val">3YR</span>
+      <span class="lbl">Parts warranty</span>
+    </div>
+  </div>
+
+  <!-- scroll hint -->
+  <div class="scroll-hint" id="scrollHint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+
+</section>
+
+<!-- anime.js from CDN (already installed via npm but CDN for standalone HTML) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── CONFIG ─────────────────────────────────────── */
+  const EXPLODED_SRC = './iphone-exploded.png';
+  const FINAL_SRC    = './iphone-final.png';
+  const SLICE_COUNT  = 11; // number of vertical strips
+
+  /* ── BUILD SLICES ───────────────────────────────── */
+  const wrapper = document.getElementById('slicesWrapper');
+  const stage   = document.getElementById('stage');
+
+  function buildSlices() {
+    wrapper.innerHTML = '';
+    const W = stage.offsetWidth;
+    const H = stage.offsetHeight;
+    const sliceW = W / SLICE_COUNT;
+
+    for (let i = 0; i < SLICE_COUNT; i++) {
+      const div = document.createElement('div');
+      div.className = 'slice';
+      div.style.cssText = `
+        left: ${(i / SLICE_COUNT) * 100}%;
+        width: ${100 / SLICE_COUNT + 0.2}%;
+        top: 0; bottom: 0;
+      `;
+
+      const img = document.createElement('img');
+      img.src = EXPLODED_SRC;
+      img.alt = '';
+      img.style.cssText = `
+        left: -${i * (100 / SLICE_COUNT)}%;
+        width: ${SLICE_COUNT * 100}%;
+        height: 100%;
+        object-fit: contain;
+      `;
+
+      div.appendChild(img);
+      wrapper.appendChild(div);
+    }
+  }
+
+  /* ── ANIMATION SEQUENCE ─────────────────────────── */
+  function runSequence() {
+    const slices    = Array.from(wrapper.querySelectorAll('.slice'));
+    const phoneFinal = document.getElementById('phoneFinal');
+    const heroCopy   = document.getElementById('heroCopy');
+    const trustBar   = document.getElementById('trustBar');
+    const scrollHint = document.getElementById('scrollHint');
+
+    // Starting positions: slices fan outward from center
+    const mid = (SLICE_COUNT - 1) / 2;
+    slices.forEach((s, i) => {
+      const dist = i - mid;
+      const spread = Math.abs(dist) * 38 + 12;
+      const direction = dist >= 0 ? 1 : -1;
+      s.style.transform = `translateX(${direction * spread}px)`;
+      s.style.opacity = '0.6';
+    });
+
+    const tl = anime.timeline({ easing: 'easeInOutExpo' });
+
+    // 1 — Brief pause, then slices appear
+    tl.add({
+      targets: slices,
+      opacity: [0, 1],
+      duration: 400,
+      delay: anime.stagger(40),
+    })
+
+    // 2 — Slices fan OUT from center (exploded look)
+    .add({
+      targets: slices,
+      translateX: (el, i) => {
+        const dist = i - mid;
+        const spread = Math.abs(dist) * 42 + 10;
+        return dist >= 0 ? spread : -spread;
+      },
+      duration: 600,
+      delay: anime.stagger(30, { from: 'center' }),
+      easing: 'easeOutExpo',
+    })
+
+    // 3 — Hold exploded for a beat
+    .add({ duration: 340 })
+
+    // 4 — ASSEMBLE: slices converge back to zero
+    .add({
+      targets: slices,
+      translateX: 0,
+      duration: 900,
+      delay: anime.stagger(55, { from: 'center' }),
+      easing: 'easeInOutBack',
+    })
+
+    // 5 — Slices fade out as assembled phone fades in
+    .add({
+      targets: slices,
+      opacity: 0,
+      duration: 400,
+      delay: anime.stagger(25),
+      easing: 'easeInExpo',
+    }, '-=300')
+
+    .add({
+      targets: phoneFinal,
+      opacity: [0, 1],
+      scale: [0.94, 1],
+      duration: 600,
+      easing: 'easeOutExpo',
+    }, '-=350')
+
+    // 6 — Copy slides up
+    .add({
+      targets: heroCopy,
+      opacity: [0, 1],
+      translateY: [18, 0],
+      duration: 700,
+      easing: 'easeOutExpo',
+    }, '-=200')
+
+    // 7 — Trust bar
+    .add({
+      targets: trustBar,
+      opacity: [0, 1],
+      translateY: [12, 0],
+      duration: 600,
+      easing: 'easeOutExpo',
+    }, '-=400')
+
+    // 8 — Scroll hint
+    .add({
+      targets: scrollHint,
+      opacity: [0, 0.7],
+      duration: 500,
+    }, '-=200');
+  }
+
+  /* ── INIT ────────────────────────────────────────── */
+  // Wait for images to load before running
+  function preloadImages(srcs) {
+    return Promise.all(srcs.map(src => new Promise(res => {
+      const img = new Image();
+      img.onload = img.onerror = res;
+      img.src = src;
+    })));
+  }
+
+  function init() {
+    buildSlices();
+
+    // Rebuild slices on resize
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(buildSlices, 200);
+    });
+
+    // Preload then animate
+    preloadImages([EXPLODED_SRC, FINAL_SRC]).then(() => {
+      // Small delay for render
+      setTimeout(runSequence, 200);
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+
+</body>
+</html>
